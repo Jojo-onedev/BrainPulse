@@ -6,9 +6,13 @@ import { useAuth } from '../../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RotateCcw, User, Settings, LogOut, Trophy, Zap, Target, Star, ChevronRight } from 'lucide-react-native';
 import { SHADOWS } from '../../theme';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../types/navigation';
 
 export const ProfileScreen = () => {
     const { user, signOut } = useAuth();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const handleResetOnboarding = async () => {
         try {
@@ -54,6 +58,14 @@ export const ProfileScreen = () => {
                 </View>
                 <Text style={styles.username}>{user.displayName}</Text>
                 <Text style={styles.email}>{user.email}</Text>
+
+                <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => navigation.navigate('EditProfile')}
+                >
+                    <Settings size={16} color={COLORS.primary} style={{ marginRight: 6 }} />
+                    <Text style={styles.editButtonText}>Modifier le profil</Text>
+                </TouchableOpacity>
             </View>
 
             <View style={styles.statsSection}>
@@ -256,5 +268,19 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: COLORS.textSecondary,
         opacity: 0.5,
+    },
+    editButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.primary + '10',
+        paddingVertical: 8,
+        paddingHorizontal: SPACING.m,
+        borderRadius: 20,
+        marginTop: SPACING.m,
+    },
+    editButtonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: COLORS.primary,
     },
 });

@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { Quiz, Question, User } from '../types';
+import * as React from 'react';
+import { Quiz, Question, User, Challenge, CategoryId } from '../types';
 import { MOCK_QUIZZES } from '../data/mock';
 import { fetchQuestionsFromApi } from '../services/quizApi';
+import { challengeService } from '../services/challenges';
 
 const ANSWER_TIME_LIMIT = 10; // seconds per question
 
@@ -12,10 +13,11 @@ interface CompetitionState {
     timeLeft: number;
     gameState: 'waiting' | 'loading' | 'playing' | 'finished';
     currentQuestion: Question | null;
+    challenge?: Challenge;
 }
 
-export const useCompetition = (user: User | null) => {
-    const [state, setState] = useState<CompetitionState>({
+export function useCompetition(user: User | null) {
+    const [state, setState] = React.useState<CompetitionState>({
         currentQuestionIndex: 0,
         score: 0,
         opponentScore: 0,
@@ -24,28 +26,58 @@ export const useCompetition = (user: User | null) => {
         currentQuestion: null,
     });
 
-    const [quiz, setQuiz] = useState<Quiz | null>(null);
-    const [matchQuestions, setMatchQuestions] = useState<Question[]>([]);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const opponentTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [quiz, setQuiz] = React.useState<Quiz | null>(null);
+    const [matchQuestions, setMatchQuestions] = React.useState<Question[]>([]);
+    const timerRef = React.useRef<any>(null);
+    const opponentTimerRef = React.useRef<any>(null);
+    const matchmakingTimerRef = React.useRef<any>(null);
 
     // Start a match
     const startMatch = async () => {
+        if (matchmakingTimerRef.current) clearTimeout(matchmakingTimerRef.current);
         setState(prev => ({ ...prev, gameState: 'loading' }));
 
         try {
-            // Randomly select a category from valid quizzes
-            const validQuizzes = MOCK_QUIZZES;
-            const randomQuiz = validQuizzes[Math.floor(Math.random() * validQuizzes.length)];
-
+            const randomQuiz = MOCK_QUIZZES[Math.floor(Math.random() * MOCK_QUIZZES.length)];
             setQuiz(randomQuiz);
-
-            // Fetch 5 questions for competition
             const questions = await fetchQuestionsFromApi(randomQuiz.category, 5);
             setMatchQuestions(questions);
 
+            matchmakingTimerRef.current = setTimeout(() => {
+                setState(prev => ({
+                    ...prev,
+                    gameState: 'playing',
+                    currentQuestion: questions[0],
+                    timeLeft: ANSWER_TIME_LIMIT,
+                    score: 0,
+                    opponentScore: 0,
+                    currentQuestionIndex: 0,
+                }));
+            }, 3000);
+        } catch (error) {
+            console.error('Failed to start competition match:', error);
+            setState(prev => ({ ...prev, gameState: 'waiting' }));
+        }
+    };
+
+    const startChallenge = async (defender: { uid: string; displayName: string }, category: CategoryId) => {
+        setState(prev => ({ ...prev, gameState: 'loading' }));
+        try {
+            const questions = await fetchQuestionsFromApi(category, 5);
+            setMatchQuestions(questions);
+            setQuiz({
+                id: 'temp-' + Date.now(),
+                title: 'Défi',
+                description: 'Duel contre ' + defender.displayName,
+                category: category as any,
+                questionsCount: 5,
+                isPremium: false,
+                difficulty: 'medium'
+            });
+
             setState(prev => ({
                 ...prev,
+                challenge: { defenderId: defender.uid, defenderName: defender.displayName, quizCategory: category } as any,
                 gameState: 'playing',
                 currentQuestion: questions[0],
                 timeLeft: ANSWER_TIME_LIMIT,
@@ -54,64 +86,37 @@ export const useCompetition = (user: User | null) => {
                 currentQuestionIndex: 0,
             }));
         } catch (error) {
-            console.error('Failed to start competition match:', error);
-            // Fallback or error state
+            console.error('Failed to start challenge:', error);
             setState(prev => ({ ...prev, gameState: 'waiting' }));
         }
     };
 
-    // Timer logic
-    useEffect(() => {
-        if (state.gameState === 'playing' && state.timeLeft > 0) {
-            timerRef.current = setTimeout(() => {
-                setState(prev => ({ ...prev, timeLeft: prev.timeLeft - 1 }));
-            }, 1000);
-        } else if (state.timeLeft === 0 && state.gameState === 'playing') {
-            handleNextQuestion();
-        }
-
-        return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, [state.timeLeft, state.gameState]);
-
-    // Mock Opponent Logic
-    useEffect(() => {
-        if (state.gameState === 'playing') {
-            // Opponent answers randomly between 2s and 8s
-            const randomDelay = Math.floor(Math.random() * 6000) + 2000;
-
-            opponentTimerRef.current = setTimeout(() => {
-                // Opponent has 60% chance of being correct
-                const isCorrect = Math.random() > 0.4;
-                if (isCorrect) {
-                    setState(prev => ({ ...prev, opponentScore: prev.opponentScore + 10 }));
-                }
-            }, randomDelay);
-        }
-        return () => {
-            if (opponentTimerRef.current) clearTimeout(opponentTimerRef.current);
-        };
-    }, [state.currentQuestionIndex, state.gameState]);
-
-
-    const handleAnswer = (selectedOptionIndex: number) => {
-        if (state.gameState !== 'playing' || !state.currentQuestion) return;
-
-        const isCorrect = state.currentQuestion.correctAnswers.includes(selectedOptionIndex);
-        const points = isCorrect ? 10 + Math.ceil(state.timeLeft / 2) : 0; // Bonus for speed
+    const acceptChallenge = async (challenge: Challenge) => {
+        setMatchQuestions(challenge.questions);
+        setQuiz({
+            id: challenge.id,
+            title: 'Revanche',
+            description: 'Duel contre ' + challenge.attackerName,
+            category: challenge.quizCategory,
+            questionsCount: challenge.questions.length,
+            isPremium: false,
+            difficulty: 'medium'
+        });
 
         setState(prev => ({
             ...prev,
-            score: prev.score + points,
+            challenge: challenge,
+            gameState: 'playing',
+            currentQuestion: challenge.questions[0],
+            timeLeft: ANSWER_TIME_LIMIT,
+            score: 0,
+            opponentScore: challenge.attackerScore,
+            currentQuestionIndex: 0,
         }));
-
-        handleNextQuestion();
     };
 
-    const handleNextQuestion = () => {
+    const handleNextQuestion = React.useCallback(() => {
         if (!quiz) return;
-
         const nextIndex = state.currentQuestionIndex + 1;
         if (nextIndex < matchQuestions.length) {
             setState(prev => ({
@@ -123,16 +128,44 @@ export const useCompetition = (user: User | null) => {
         } else {
             finishMatch();
         }
+    }, [quiz, state.currentQuestionIndex, matchQuestions.length]);
+
+    const handleAnswer = (selectedOptionIndex: number) => {
+        if (state.gameState !== 'playing' || !state.currentQuestion) return;
+        const isCorrect = state.currentQuestion.correctAnswers.includes(selectedOptionIndex);
+        const points = isCorrect ? 10 + Math.ceil(state.timeLeft / 2) : 0;
+        setState(prev => ({ ...prev, score: prev.score + points }));
+        handleNextQuestion();
     };
 
-    const finishMatch = () => {
+    const finishMatch = async () => {
         setState(prev => ({ ...prev, gameState: 'finished' }));
+        if (user) {
+            try {
+                await challengeService.updatePlayerStats(user.uid, state.score);
+                if (state.challenge) {
+                    if (state.challenge.id) {
+                        await challengeService.completeChallenge(state.challenge.id, state.score);
+                    } else {
+                        await challengeService.createChallenge(
+                            { uid: user.uid, displayName: user.displayName, photoURL: user.photoURL },
+                            { uid: state.challenge.defenderId, displayName: state.challenge.defenderName },
+                            state.challenge.quizCategory,
+                            matchQuestions,
+                            state.score
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving match result:', error);
+            }
+        }
     };
 
     const leaveMatch = () => {
         if (timerRef.current) clearTimeout(timerRef.current);
         if (opponentTimerRef.current) clearTimeout(opponentTimerRef.current);
-
+        if (matchmakingTimerRef.current) clearTimeout(matchmakingTimerRef.current);
         setState({
             currentQuestionIndex: 0,
             score: 0,
@@ -145,10 +178,34 @@ export const useCompetition = (user: User | null) => {
         setQuiz(null);
     };
 
+    React.useEffect(() => {
+        if (state.gameState === 'playing' && state.timeLeft > 0) {
+            timerRef.current = setTimeout(() => {
+                setState(prev => ({ ...prev, timeLeft: prev.timeLeft - 1 }));
+            }, 1000);
+        } else if (state.timeLeft === 0 && state.gameState === 'playing') {
+            handleNextQuestion();
+        }
+        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    }, [state.timeLeft, state.gameState, handleNextQuestion]);
+
+    React.useEffect(() => {
+        if (state.gameState === 'playing' && !state.challenge) {
+            const randomDelay = Math.floor(Math.random() * 6000) + 2000;
+            opponentTimerRef.current = setTimeout(() => {
+                const isCorrect = Math.random() > 0.4;
+                if (isCorrect) setState(prev => ({ ...prev, opponentScore: prev.opponentScore + 10 }));
+            }, randomDelay);
+        }
+        return () => { if (opponentTimerRef.current) clearTimeout(opponentTimerRef.current); };
+    }, [state.currentQuestionIndex, state.gameState, state.challenge]);
+
     return {
         state,
         startMatch,
+        startChallenge,
+        acceptChallenge,
         handleAnswer,
         leaveMatch,
     };
-};
+}

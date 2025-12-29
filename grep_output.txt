@@ -1,0 +1,1 @@
+37:    updatePlayerStats: async (userId: string, score: number): Promise<void> => {

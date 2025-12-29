@@ -46,6 +46,23 @@ export interface Match {
     createdAt: number;
 }
 
+export interface Challenge {
+    id: string;
+    attackerId: string;
+    attackerName: string;
+    attackerPhotoURL?: string;
+    defenderId: string;
+    defenderName: string;
+    status: 'pending' | 'completed';
+    quizCategory: CategoryId;
+    questions: Question[];
+    attackerScore: number;
+    defenderScore?: number;
+    winnerId?: string;
+    createdAt: number;
+    updatedAt: number;
+}
+
 export interface Score {
     id?: string;
     userId: string;

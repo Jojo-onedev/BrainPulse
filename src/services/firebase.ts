@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, initializeAuth, Auth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // @ts-ignore - Internal firebase export that might not be in main index.d.ts but is available in React Native environment
@@ -32,5 +33,6 @@ if (getApps().length === 0) {
 }
 
 const firestore = getFirestore(app);
+const storage = getStorage(app);
 
-export { auth, firestore };
+export { auth, firestore, storage };

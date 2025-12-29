@@ -9,6 +9,7 @@ import { ResultScreen } from '../screens/quiz/ResultScreen';
 import { PaywallScreen } from '../screens/paywall/PaywallScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { SignupScreen } from '../screens/auth/SignupScreen';
+import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { RootStackParamList } from '../types/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator } from 'react-native';
@@ -94,6 +95,14 @@ export const RootNavigator = () => {
                     options={{
                         presentation: 'modal',
                         animation: 'slide_from_bottom'
+                    }}
+                />
+                <Stack.Screen
+                    name="EditProfile"
+                    component={EditProfileScreen}
+                    options={{
+                        headerShown: false,
+                        animation: 'slide_from_right'
                     }}
                 />
             </Stack.Navigator>

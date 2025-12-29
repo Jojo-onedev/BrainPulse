@@ -9,6 +9,7 @@ export type RootStackParamList = {
     Signup: undefined;
     Result: { score: number; total: number; quizId: string };
     Paywall: undefined;
+    EditProfile: undefined;
 };
 
 export type MainTabParamList = {

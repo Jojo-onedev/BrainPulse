@@ -1,0 +1,11 @@
+npm warn Unknown global config "python". This will stop working in the next major version of npm.
+src/data/mock.ts(1,38): error TS2792: Cannot find module '../types'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/hooks/useCompetition.ts(2,61): error TS2792: Cannot find module '../types'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/services/challenges.ts(14,8): error TS2792: Cannot find module 'firebase/firestore'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/services/challenges.ts(16,43): error TS2792: Cannot find module '../types'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/services/firebase.ts(1,48): error TS2792: Cannot find module 'firebase/app'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/services/firebase.ts(2,47): error TS2792: Cannot find module 'firebase/auth'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/services/firebase.ts(3,30): error TS2792: Cannot find module 'firebase/firestore'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/services/firebase.ts(4,28): error TS2792: Cannot find module 'firebase/storage'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/services/firebase.ts(5,26): error TS2792: Cannot find module '@react-native-async-storage/async-storage'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?
+src/services/quizApi.ts(1,38): error TS2792: Cannot find module '../types'. Did you mean to set the 'moduleResolution' option to 'nodenext', or to add aliases to the 'paths' option?

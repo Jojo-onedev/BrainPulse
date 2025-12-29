@@ -1,19 +1,71 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, TextInput, ScrollView, Dimensions } from 'react-native';
 import { ScreenWrapper } from '../../components/layout/ScreenWrapper';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { COLORS, SPACING, SHADOWS } from '../../theme';
-import { Lock, Zap, Clock, Trophy, X } from 'lucide-react-native';
+import { Lock, Zap, Clock, Trophy, X, Search, UserPlus, ArrowRight, CheckCircle2 } from 'lucide-react-native';
 import { useCompetition } from '../../hooks/useCompetition';
-import { MotiView } from 'moti';
+import { MotiView, AnimatePresence } from 'moti';
+import { challengeService } from '../../services/challenges';
+import { Challenge, User, CATEGORIES } from '../../types';
+import { PremiumAlert } from '../../components/ui/PremiumAlert';
 
 export const CompetitionScreen = () => {
     const { user, loading } = useAuth();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const { state, startMatch, handleAnswer, leaveMatch } = useCompetition(user);
+    const { state, startMatch, startChallenge, acceptChallenge, handleAnswer, leaveMatch } = useCompetition(user);
+
+    const [view, setView] = useState<'lobby' | 'search' | 'category_select'>('lobby');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<User[]>([]);
+    const [selectedDefender, setSelectedDefender] = useState<User | null>(null);
+    const [receivedChallenges, setReceivedChallenges] = useState<Challenge[]>([]);
+    const [sentChallenges, setSentChallenges] = useState<Challenge[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [alert, setAlert] = useState<{ show: boolean; title: string; message: string; type: 'success' | 'error' | 'info' }>({
+        show: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+
+    useEffect(() => {
+        if (user && state.gameState === 'waiting') {
+            loadChallenges();
+        }
+    }, [user, state.gameState]);
+
+    const loadChallenges = async () => {
+        if (!user) return;
+        const [received, sent] = await Promise.all([
+            challengeService.getReceivedChallenges(user.uid),
+            challengeService.getSentChallenges(user.uid)
+        ]);
+        setReceivedChallenges(received);
+        setSentChallenges(sent);
+    };
+
+    const handleSearch = async () => {
+        if (!user || !searchTerm.trim()) return;
+        setIsSearching(true);
+        const results = await challengeService.searchUsers(searchTerm, user.uid);
+        setSearchResults(results);
+        setIsSearching(false);
+    };
+
+    const onSelectDefender = (defender: User) => {
+        setSelectedDefender(defender);
+        setView('category_select');
+    };
+
+    const onStartChallenge = (category: string) => {
+        if (selectedDefender) {
+            startChallenge(selectedDefender, category as any);
+        }
+    };
 
     const handleLeave = () => {
         if (state.gameState === 'playing') {
@@ -74,35 +126,162 @@ export const CompetitionScreen = () => {
     }
 
     if (state.gameState === 'waiting') {
+        if (view === 'category_select') {
+            return (
+                <ScreenWrapper style={styles.container}>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => setView('search')} style={styles.backButton}>
+                            <X size={24} color={COLORS.text} />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle}>Choisir un thème</Text>
+                        <View style={{ width: 40 }} />
+                    </View>
+
+                    <ScrollView contentContainerStyle={styles.categoryGrid}>
+                        {CATEGORIES.map((cat) => (
+                            <TouchableOpacity
+                                key={cat.id}
+                                style={[styles.categoryCard, { backgroundColor: cat.color + '15', borderColor: cat.color }]}
+                                onPress={() => onStartChallenge(cat.id)}
+                            >
+                                <Text style={[styles.categoryLabel, { color: cat.color }]}>{cat.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </ScreenWrapper>
+            );
+        }
+
+        if (view === 'search') {
+            return (
+                <ScreenWrapper style={styles.container}>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => setView('lobby')} style={styles.backButton}>
+                            <X size={24} color={COLORS.text} />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle}>Défier un ami</Text>
+                        <View style={{ width: 40 }} />
+                    </View>
+
+                    <View style={styles.searchSection}>
+                        <View style={styles.searchInputWrapper}>
+                            <Search size={20} color={COLORS.textSecondary} />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Rechercher par pseudo..."
+                                value={searchTerm}
+                                onChangeText={setSearchTerm}
+                                placeholderTextColor={COLORS.textSecondary}
+                                autoCapitalize="none"
+                            />
+                        </View>
+                        <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
+                            {isSearching ? <ActivityIndicator color="#FFF" /> : <Text style={styles.searchBtnText}>Rechercher</Text>}
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView style={styles.resultsList}>
+                        {searchResults.length === 0 && !isSearching && searchTerm.length > 0 && (
+                            <Text style={styles.noResultsText}>Aucun utilisateur trouvé.</Text>
+                        )}
+                        {searchResults.map((u) => (
+                            <TouchableOpacity key={u.uid} style={styles.userCard} onPress={() => onSelectDefender(u)}>
+                                <View style={styles.userInfo}>
+                                    <View style={styles.userAvatar}>
+                                        <Text style={styles.avatarInitial}>{u.displayName[0].toUpperCase()}</Text>
+                                    </View>
+                                    <View>
+                                        <Text style={styles.userName}>{u.displayName}</Text>
+                                        <Text style={styles.userPoints}>{u.stats?.totalScore || 0} pts</Text>
+                                    </View>
+                                </View>
+                                <UserPlus size={20} color={COLORS.primary} />
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </ScreenWrapper>
+            );
+        }
+
         return (
             <ScreenWrapper style={styles.container}>
-                <View style={styles.lobbyContent}>
-                    <Trophy size={80} color={COLORS.winner} style={{ marginBottom: SPACING.l }} />
-                    <Text style={styles.title}>Prêt à combattre ?</Text>
-                    <Text style={styles.subtitle}>
-                        Affronte un adversaire aléatoire dans un duel de culture générale.
-                    </Text>
-
-                    <View style={styles.statsCard}>
-                        <View style={styles.statRow}>
-                            <Text style={styles.statLabel}>Tes points</Text>
-                            <Text style={styles.statValue}>1250</Text>
-                        </View>
-                        <View style={styles.divider} />
-                        <View style={styles.statRow}>
-                            <Text style={styles.statLabel}>Classement</Text>
-                            <Text style={styles.statValue}>#42</Text>
-                        </View>
+                <ScrollView contentContainerStyle={styles.lobbyContentScroller}>
+                    <View style={styles.lobbyHeader}>
+                        <Trophy size={60} color={COLORS.winner} style={{ marginBottom: SPACING.s }} />
+                        <Text style={styles.title}>Compétition</Text>
+                        <Text style={styles.subtitle}>Défie tes amis et grimpe au sommet !</Text>
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.button, styles.playButton]}
-                        onPress={startMatch}
+                        style={[styles.button, styles.playButton, styles.fullWidth]}
+                        onPress={() => setView('search')}
                     >
                         <Zap color="#FFF" size={24} style={{ marginRight: 8 }} />
-                        <Text style={styles.buttonText}>Trouver un adversaire</Text>
+                        <Text style={styles.buttonText}>Défier un adversaire</Text>
                     </TouchableOpacity>
-                </View>
+
+                    <AnimatePresence>
+                        {receivedChallenges.length > 0 && (
+                            <MotiView
+                                from={{ opacity: 0, translateY: 20 }}
+                                animate={{ opacity: 1, translateY: 0 }}
+                                style={styles.section}
+                            >
+                                <Text style={styles.sectionTitle}>Défis reçus ({receivedChallenges.length})</Text>
+                                {receivedChallenges.map((challenge) => (
+                                    <TouchableOpacity
+                                        key={challenge.id}
+                                        style={styles.challengeItem}
+                                        onPress={() => acceptChallenge(challenge)}
+                                    >
+                                        <View style={styles.userInfo}>
+                                            <View style={[styles.userAvatar, { backgroundColor: COLORS.secondary }]}>
+                                                <Text style={styles.avatarInitial}>{challenge.attackerName[0].toUpperCase()}</Text>
+                                            </View>
+                                            <View>
+                                                <Text style={styles.challengeSender}>{challenge.attackerName}</Text>
+                                                <Text style={styles.challengeMeta}>
+                                                    Thème: {CATEGORIES.find(c => c.id === challenge.quizCategory)?.label}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        <ArrowRight size={20} color={COLORS.textSecondary} />
+                                    </TouchableOpacity>
+                                ))}
+                            </MotiView>
+                        )}
+
+                        {sentChallenges.length > 0 && (
+                            <MotiView
+                                from={{ opacity: 0, translateY: 20 }}
+                                animate={{ opacity: 1, translateY: 0 }}
+                                style={styles.section}
+                            >
+                                <Text style={styles.sectionTitle}>Défis envoyés</Text>
+                                {sentChallenges.map((challenge) => (
+                                    <View key={challenge.id} style={styles.challengeItem}>
+                                        <View style={styles.userInfo}>
+                                            <View style={[styles.userAvatar, { backgroundColor: COLORS.border }]}>
+                                                <Text style={styles.avatarInitial}>{challenge.defenderName[0].toUpperCase()}</Text>
+                                            </View>
+                                            <View>
+                                                <Text style={styles.challengeSender}>{challenge.defenderName}</Text>
+                                                <Text style={styles.challengeMeta}>
+                                                    {challenge.status === 'pending'
+                                                        ? 'En attente...'
+                                                        : `Score: ${challenge.attackerScore} - ${challenge.defenderScore}`}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        {challenge.status === 'completed' && (
+                                            <CheckCircle2 size={20} color={COLORS.success} />
+                                        )}
+                                    </View>
+                                ))}
+                            </MotiView>
+                        )}
+                    </AnimatePresence>
+                </ScrollView>
             </ScreenWrapper>
         );
     }
@@ -182,6 +361,21 @@ export const CompetitionScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: COLORS.background,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: SPACING.m,
+        justifyContent: 'space-between',
+    },
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    backButton: {
+        padding: 8,
     },
     leaveButtonHeader: {
         padding: 8,
@@ -351,5 +545,142 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.text,
         marginVertical: SPACING.xl,
+    },
+    fullWidth: {
+        width: '100%',
+    },
+    lobbyHeader: {
+        alignItems: 'center',
+        marginBottom: SPACING.xl,
+    },
+    lobbyContentScroller: {
+        padding: SPACING.m,
+        alignItems: 'center',
+    },
+    section: {
+        width: '100%',
+        marginTop: SPACING.xl,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.text,
+        marginBottom: SPACING.m,
+    },
+    challengeItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: COLORS.card,
+        padding: SPACING.m,
+        borderRadius: 16,
+        marginBottom: SPACING.s,
+        ...SHADOWS.small,
+    },
+    challengeSender: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: COLORS.text,
+    },
+    challengeMeta: {
+        fontSize: 12,
+        color: COLORS.textSecondary,
+    },
+    searchSection: {
+        flexDirection: 'row',
+        padding: SPACING.m,
+        gap: SPACING.s,
+    },
+    searchInputWrapper: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.card,
+        borderRadius: 12,
+        paddingHorizontal: SPACING.m,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    searchInput: {
+        flex: 1,
+        height: 48,
+        marginLeft: SPACING.s,
+        color: COLORS.text,
+    },
+    searchBtn: {
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: SPACING.m,
+        borderRadius: 12,
+        justifyContent: 'center',
+    },
+    searchBtnText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+    },
+    resultsList: {
+        flex: 1,
+        padding: SPACING.m,
+    },
+    userCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: COLORS.card,
+        padding: SPACING.m,
+        borderRadius: 16,
+        marginBottom: SPACING.s,
+        ...SHADOWS.small,
+    },
+    userInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: SPACING.m,
+    },
+    userAvatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: COLORS.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    avatarInitial: {
+        color: '#FFF',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    userName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: COLORS.text,
+    },
+    userPoints: {
+        fontSize: 12,
+        color: COLORS.textSecondary,
+    },
+    noResultsText: {
+        textAlign: 'center',
+        color: COLORS.textSecondary,
+        marginTop: SPACING.xl,
+    },
+    categoryGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        padding: SPACING.m,
+        gap: SPACING.m,
+    },
+    categoryCard: {
+        width: '47%',
+        padding: SPACING.l,
+        borderRadius: 20,
+        borderWidth: 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 100,
+    },
+    categoryLabel: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
