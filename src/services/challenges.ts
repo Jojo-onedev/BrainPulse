@@ -46,6 +46,31 @@ const searchUsers = async (searchTerm: string, currentUserId: string): Promise<U
     }
 };
 
+const getPotentialOpponents = async (currentUserId: string): Promise<User[]> => {
+    try {
+        const usersRef = collection(firestore, USERS_COLLECTION);
+        const q = query(
+            usersRef,
+            orderBy('displayName'),
+            limit(20)
+        );
+
+        const querySnapshot = await getDocs(q);
+        const users: User[] = [];
+        querySnapshot.forEach((doc) => {
+            const userData = doc.data() as User;
+            if (userData.uid !== currentUserId) {
+                users.push(userData);
+            }
+        });
+
+        return users;
+    } catch (error) {
+        console.error('Error getting potential opponents:', error);
+        return [];
+    }
+};
+
 const createChallenge = async (
     attacker: { uid: string; displayName: string; photoURL?: string },
     defender: { uid: string; displayName: string },
@@ -161,6 +186,7 @@ const updatePlayerStats = async (userId: string, score: number): Promise<void> =
 
 export const challengeService = {
     searchUsers,
+    getPotentialOpponents,
     createChallenge,
     getReceivedChallenges,
     getSentChallenges,

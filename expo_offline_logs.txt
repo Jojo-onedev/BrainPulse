@@ -1,0 +1,6 @@
+npm warn Unknown global config "python". This will stop working in the next major version of npm.
+Starting project at /home/jonathanbationo/Documents/MyDiffProject/BrainPulse
+Starting Metro Bundler
+Skipping dependency validation in offline mode
+Waiting on http://localhost:8081
+Logs for your project will appear below.

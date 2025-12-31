@@ -1,0 +1,8 @@
+npm warn Unknown global config "python". This will stop working in the next major version of npm.
+Starting project at /home/jonathanbationo/Documents/MyDiffProject/BrainPulse
+› Port 8081 is running this app in another window
+  /home/jonathanbationo/Documents/MyDiffProject/BrainPulse (pid 1165807)
+Input is required, but 'npx expo' is in non-interactive mode.
+Required input:
+> Use port 8082 instead?
+› Skipping dev server

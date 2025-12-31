@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'react-native';
 import { COLORS, SPACING, SHADOWS, FONTS } from '../../theme';
 import { AlertCircle, CheckCircle, Info, X } from 'lucide-react-native';
-import { MotiView, AnimatePresence } from 'moti';
 
 interface PremiumAlertProps {
     visible: boolean;
@@ -53,32 +52,22 @@ export const PremiumAlert: React.FC<PremiumAlertProps> = ({
             onRequestClose={onClose}
         >
             <View style={styles.overlay}>
-                <AnimatePresence>
-                    {visible && (
-                        <MotiView
-                            from={{ opacity: 0, scale: 0.9, translateY: 20 }}
-                            animate={{ opacity: 1, scale: 1, translateY: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, translateY: 20 }}
-                            transition={{ type: 'spring', damping: 15 }}
-                            style={styles.alertContainer}
-                        >
-                            <View style={[styles.iconContainer, { backgroundColor: getAccentColor() + '15' }]}>
-                                {getIcon()}
-                            </View>
+                <View style={styles.alertContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: getAccentColor() + '15' }]}>
+                        {getIcon()}
+                    </View>
 
-                            <Text style={styles.title}>{title}</Text>
-                            <Text style={styles.message}>{message}</Text>
+                    <Text style={styles.title}>{title}</Text>
+                    <Text style={styles.message}>{message}</Text>
 
-                            <TouchableOpacity
-                                style={[styles.button, { backgroundColor: getAccentColor() }]}
-                                onPress={onClose}
-                                activeOpacity={0.8}
-                            >
-                                <Text style={styles.buttonText}>{buttonText}</Text>
-                            </TouchableOpacity>
-                        </MotiView>
-                    )}
-                </AnimatePresence>
+                    <TouchableOpacity
+                        style={[styles.button, { backgroundColor: getAccentColor() }]}
+                        onPress={onClose}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.buttonText}>{buttonText}</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </Modal>
     );

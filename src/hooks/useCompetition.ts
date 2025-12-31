@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Quiz, Question, User, Challenge, CategoryId } from '../types';
 import { MOCK_QUIZZES } from '../data/mock';
 import { fetchQuestionsFromApi } from '../services/quizApi';
@@ -17,7 +17,7 @@ interface CompetitionState {
 }
 
 export function useCompetition(user: User | null) {
-    const [state, setState] = React.useState<CompetitionState>({
+    const [state, setState] = useState<CompetitionState>({
         currentQuestionIndex: 0,
         score: 0,
         opponentScore: 0,
@@ -26,11 +26,11 @@ export function useCompetition(user: User | null) {
         currentQuestion: null,
     });
 
-    const [quiz, setQuiz] = React.useState<Quiz | null>(null);
-    const [matchQuestions, setMatchQuestions] = React.useState<Question[]>([]);
-    const timerRef = React.useRef<any>(null);
-    const opponentTimerRef = React.useRef<any>(null);
-    const matchmakingTimerRef = React.useRef<any>(null);
+    const [quiz, setQuiz] = useState<Quiz | null>(null);
+    const [matchQuestions, setMatchQuestions] = useState<Question[]>([]);
+    const timerRef = useRef<any>(null);
+    const opponentTimerRef = useRef<any>(null);
+    const matchmakingTimerRef = useRef<any>(null);
 
     // Start a match
     const startMatch = async () => {
@@ -115,7 +115,7 @@ export function useCompetition(user: User | null) {
         }));
     };
 
-    const handleNextQuestion = React.useCallback(() => {
+    const handleNextQuestion = useCallback(() => {
         if (!quiz) return;
         const nextIndex = state.currentQuestionIndex + 1;
         if (nextIndex < matchQuestions.length) {
@@ -178,7 +178,7 @@ export function useCompetition(user: User | null) {
         setQuiz(null);
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (state.gameState === 'playing' && state.timeLeft > 0) {
             timerRef.current = setTimeout(() => {
                 setState(prev => ({ ...prev, timeLeft: prev.timeLeft - 1 }));
@@ -189,7 +189,7 @@ export function useCompetition(user: User | null) {
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
     }, [state.timeLeft, state.gameState, handleNextQuestion]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (state.gameState === 'playing' && !state.challenge) {
             const randomDelay = Math.floor(Math.random() * 6000) + 2000;
             opponentTimerRef.current = setTimeout(() => {

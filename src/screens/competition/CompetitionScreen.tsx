@@ -6,9 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { COLORS, SPACING, SHADOWS } from '../../theme';
-import { Lock, Zap, Clock, Trophy, X, Search, UserPlus, ArrowRight, CheckCircle2 } from 'lucide-react-native';
+import { Lock, Zap, Clock, Trophy, X, Search, UserPlus, ArrowRight, CheckCircle2, Home } from 'lucide-react-native';
 import { useCompetition } from '../../hooks/useCompetition';
-import { MotiView, AnimatePresence } from 'moti';
 import { challengeService } from '../../services/challenges';
 import { Challenge, User, CATEGORIES } from '../../types';
 import { PremiumAlert } from '../../components/ui/PremiumAlert';
@@ -24,6 +23,7 @@ export const CompetitionScreen = () => {
     const [selectedDefender, setSelectedDefender] = useState<User | null>(null);
     const [receivedChallenges, setReceivedChallenges] = useState<Challenge[]>([]);
     const [sentChallenges, setSentChallenges] = useState<Challenge[]>([]);
+    const [discoveryResults, setDiscoveryResults] = useState<User[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [alert, setAlert] = useState<{ show: boolean; title: string; message: string; type: 'success' | 'error' | 'info' }>({
         show: false,
@@ -35,8 +35,11 @@ export const CompetitionScreen = () => {
     useEffect(() => {
         if (user && state.gameState === 'waiting') {
             loadChallenges();
+            if (view === 'search') {
+                loadInitialOpponents();
+            }
         }
-    }, [user, state.gameState]);
+    }, [user, state.gameState, view]);
 
     const loadChallenges = async () => {
         if (!user) return;
@@ -46,6 +49,14 @@ export const CompetitionScreen = () => {
         ]);
         setReceivedChallenges(received);
         setSentChallenges(sent);
+    };
+
+    const loadInitialOpponents = async () => {
+        if (!user) return;
+        setIsSearching(true);
+        const results = await challengeService.getPotentialOpponents(user.uid);
+        setDiscoveryResults(results);
+        setIsSearching(false);
     };
 
     const handleSearch = async () => {
@@ -181,10 +192,13 @@ export const CompetitionScreen = () => {
                     </View>
 
                     <ScrollView style={styles.resultsList}>
+                        {searchTerm.length === 0 && !isSearching && discoveryResults.length > 0 && (
+                            <Text style={styles.sectionSubtitle}>Adversaires suggérés</Text>
+                        )}
                         {searchResults.length === 0 && !isSearching && searchTerm.length > 0 && (
                             <Text style={styles.noResultsText}>Aucun utilisateur trouvé.</Text>
                         )}
-                        {searchResults.map((u) => (
+                        {(searchTerm.length > 0 ? searchResults : discoveryResults).map((u) => (
                             <TouchableOpacity key={u.uid} style={styles.userCard} onPress={() => onSelectDefender(u)}>
                                 <View style={styles.userInfo}>
                                     <View style={styles.userAvatar}>
@@ -220,13 +234,9 @@ export const CompetitionScreen = () => {
                         <Text style={styles.buttonText}>Défier un adversaire</Text>
                     </TouchableOpacity>
 
-                    <AnimatePresence>
+                    <View>
                         {receivedChallenges.length > 0 && (
-                            <MotiView
-                                from={{ opacity: 0, translateY: 20 }}
-                                animate={{ opacity: 1, translateY: 0 }}
-                                style={styles.section}
-                            >
+                            <View style={styles.section}>
                                 <Text style={styles.sectionTitle}>Défis reçus ({receivedChallenges.length})</Text>
                                 {receivedChallenges.map((challenge) => (
                                     <TouchableOpacity
@@ -248,15 +258,11 @@ export const CompetitionScreen = () => {
                                         <ArrowRight size={20} color={COLORS.textSecondary} />
                                     </TouchableOpacity>
                                 ))}
-                            </MotiView>
+                            </View>
                         )}
 
                         {sentChallenges.length > 0 && (
-                            <MotiView
-                                from={{ opacity: 0, translateY: 20 }}
-                                animate={{ opacity: 1, translateY: 0 }}
-                                style={styles.section}
-                            >
+                            <View style={styles.section}>
                                 <Text style={styles.sectionTitle}>Défis envoyés</Text>
                                 {sentChallenges.map((challenge) => (
                                     <View key={challenge.id} style={styles.challengeItem}>
@@ -278,9 +284,9 @@ export const CompetitionScreen = () => {
                                         )}
                                     </View>
                                 ))}
-                            </MotiView>
+                            </View>
                         )}
-                    </AnimatePresence>
+                    </View>
                 </ScrollView>
             </ScreenWrapper>
         );
@@ -301,6 +307,17 @@ export const CompetitionScreen = () => {
                         onPress={() => startMatch()} // Restart
                     >
                         <Text style={styles.buttonText}>Rejouer</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.button, styles.homeButton]}
+                        onPress={() => {
+                            leaveMatch();
+                            setView('lobby');
+                        }}
+                    >
+                        <Home color={COLORS.primary} size={20} style={{ marginRight: 8 }} />
+                        <Text style={styles.homeButtonText}>Quitter le salon</Text>
                     </TouchableOpacity>
                 </View>
             </ScreenWrapper>
@@ -426,6 +443,14 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.xl,
         lineHeight: 24,
     },
+    sectionSubtitle: {
+        fontSize: 14,
+        color: COLORS.textSecondary,
+        marginBottom: SPACING.m,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
     button: {
         backgroundColor: COLORS.primary,
         paddingVertical: SPACING.m,
@@ -445,6 +470,20 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    homeButton: {
+        backgroundColor: 'transparent',
+        marginTop: SPACING.l,
+        borderWidth: 1.5,
+        borderColor: COLORS.primary + '40',
+        paddingVertical: SPACING.m,
+        paddingHorizontal: SPACING.xl,
+        borderRadius: 14,
+    },
+    homeButtonText: {
+        color: COLORS.primary,
+        fontSize: 16,
+        fontWeight: '600',
     },
     statsCard: {
         flexDirection: 'row',

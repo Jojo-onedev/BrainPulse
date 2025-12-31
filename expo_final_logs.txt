@@ -1,0 +1,16 @@
+npm warn Unknown global config "python". This will stop working in the next major version of npm.
+  --non-interactive is not supported, use $CI=1 instead
+Starting project at /home/jonathanbationo/Documents/MyDiffProject/BrainPulse
+Starting Metro Bundler
+TypeError: fetch failed
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at fetchWithCredentials (/home/jonathanbationo/Documents/MyDiffProject/BrainPulse/node_modules/@expo/cli/src/api/rest/client.ts:98:24)
+    at cachedFetch (/home/jonathanbationo/Documents/MyDiffProject/BrainPulse/node_modules/@expo/cli/src/api/rest/cache/wrapFetchWithCache.ts:26:24)
+    at getVersionsAsync (/home/jonathanbationo/Documents/MyDiffProject/BrainPulse/node_modules/@expo/cli/src/api/getVersions.ts:52:19)
+    at getRemoteVersionsForSdkAsync (/home/jonathanbationo/Documents/MyDiffProject/BrainPulse/node_modules/@expo/cli/src/start/doctor/dependencies/getVersionedPackages.ts:82:29)
+    at getCombinedKnownVersionsAsync (/home/jonathanbationo/Documents/MyDiffProject/BrainPulse/node_modules/@expo/cli/src/start/doctor/dependencies/getVersionedPackages.ts:61:7)
+    at getVersionedDependenciesAsync (/home/jonathanbationo/Documents/MyDiffProject/BrainPulse/node_modules/@expo/cli/src/start/doctor/dependencies/validateDependenciesVersions.ts:100:33)
+    at validateDependenciesVersionsAsync (/home/jonathanbationo/Documents/MyDiffProject/BrainPulse/node_modules/@expo/cli/src/start/doctor/dependencies/validateDependenciesVersions.ts:49:25)
+    at startAsync (/home/jonathanbationo/Documents/MyDiffProject/BrainPulse/node_modules/@expo/cli/src/start/startAsync.ts:110:5)
