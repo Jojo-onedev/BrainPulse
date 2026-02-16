@@ -86,7 +86,7 @@ export const SignupScreen = ({ navigation }: any) => {
             >
                 <ScrollView contentContainerStyle={styles.content}>
                     <Text style={styles.title}>Créer un compte</Text>
-                    <Text style={styles.subtitle}>Rejoins la communauté BrainPulse !</Text>
+                    <Text style={styles.subtitle}>Rejoins la communauté Duelio !</Text>
 
                     <View style={styles.avatarPickerSection}>
                         <View style={styles.mainAvatarContainer}>

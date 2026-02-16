@@ -2,7 +2,7 @@ import { Quiz, Question, User } from '../types';
 
 export const MOCK_USER: User = {
     uid: 'user_123',
-    email: 'demo@brainpulse.app',
+    email: 'demo@duelio.app',
     displayName: 'Alexandre',
     createdAt: Date.now(),
     isPremium: false,

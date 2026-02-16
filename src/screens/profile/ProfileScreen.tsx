@@ -121,7 +121,7 @@ export const ProfileScreen = () => {
             </View>
 
             <View style={styles.footer}>
-                <Text style={styles.versionText}>BrainPulse Version 1.0.0</Text>
+                <Text style={styles.versionText}>Duelio Version 1.0.0</Text>
             </View>
         </ScreenWrapper>
     );
