@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: rgba(99, 102, 241, 0.1);
+  --secondary: #ec4899;
+  --accent: #8b5cf6;
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --sidebar-bg: #8c8f94;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+}
+
+@layer base {
+  body {
+    @apply bg-[#f8fafc] text-[#0f172a] min-h-screen font-sans antialiased;
+  }
+}
+
+@layer components {
+  .sidebar-bg {
+    @apply bg-white border-r border-[#e2e8f0] shadow-sidebar;
+  }
+
+  .glass-card {
+    @apply bg-white border border-[#e2e8f0] rounded-[24px] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-indigo-100;
+  }
+
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-indigo-100 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-200 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 bg-white border border-[#e2e8f0] text-[#0f172a] font-bold px-6 py-3 rounded-xl shadow-sm hover:bg-[#f8fafc] hover:border-[#64748b] transition-all active:scale-95;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-[#0f172a] to-[#6366f1] bg-clip-text text-transparent font-black;
+  }
+
+  .sidebar-link-active {
+    @apply bg-indigo-500 text-white shadow-lg shadow-indigo-100;
+  }
+}

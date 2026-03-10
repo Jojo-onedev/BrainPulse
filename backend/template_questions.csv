@@ -1,0 +1,6 @@
+question,options,correct_answers,type,category,difficulty,time_limit,points
+"Quel est le plus grand désert d'Afrique ?","Sahara;Kalahari;Namib;Danakil",0,single,geography,easy,20,5
+"Qui était le premier président du Sénégal ?","Léopold Sédar Senghor;Abdou Diouf;Abdoulaye Wade;Macky Sall",0,single,history,medium,30,10
+"L'Empire du Ghana se trouvait au même endroit que le Ghana actuel.","Vrai;Faux",1,boolean,history,hard,15,15
+"Quel pays est surnommé le pays des mille collines ?","Rwanda;Burundi;Ouganda;Kenya",0,single,geography,medium,20,10
+"En quelle année Nelson Mandela a-t-il reçu le prix Nobel de la paix ?","1990;1992;1993;1994",2,single,history,medium,25,10
