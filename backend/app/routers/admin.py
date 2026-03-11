@@ -42,12 +42,58 @@ async def delete_all_questions(db: Session = Depends(get_db)):
         db.rollback()
         return {"status": "error", "message": str(e)}
 
+@router.post("/questions")
+async def create_question(question_data: dict, db: Session = Depends(get_db)):
+    try:
+        # Generate ID if not provided
+        if "id" not in question_data:
+            import uuid
+            question_data["id"] = str(uuid.uuid4())
+            
+        new_q = Question(**question_data)
+        db.add(new_q)
+        db.commit()
+        db.refresh(new_q)
+        return {"status": "success", "question": new_q}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
 @router.delete("/questions/{question_id}")
 async def delete_question(question_id: str, db: Session = Depends(get_db)):
     try:
         db.query(Question).filter(Question.id == question_id).delete()
         db.commit()
         return {"status": "success"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+# --- USER MANAGEMENT ---
+
+@router.get("/users")
+async def get_users(db: Session = Depends(get_db), limit: int = 100):
+    return db.query(User).order_by(User.created_at.desc()).limit(limit).all()
+
+@router.delete("/users/{user_id}")
+async def delete_user(user_id: str, db: Session = Depends(get_db)):
+    try:
+        db.query(User).filter(User.id == user_id).delete()
+        db.commit()
+        return {"status": "success"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.patch("/users/{user_id}/premium")
+async def toggle_user_premium(user_id: str, db: Session = Depends(get_db)):
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"status": "error", "message": "User not found"}
+        user.is_premium = not user.is_premium
+        db.commit()
+        return {"status": "success", "is_premium": user.is_premium}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}

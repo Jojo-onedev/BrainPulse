@@ -69,14 +69,14 @@ export const Dashboard: React.FC = () => {
             variants={container}
             className="max-w-6xl mx-auto py-4"
         >
-            <motion.header variants={itemAnim} className="mb-10">
-                <h2 className="text-4xl font-black mb-1 tracking-tighter text-slate-900">
+            <motion.header variants={itemAnim} className="mb-8 lg:mb-10 px-4 lg:px-0">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-black mb-1 tracking-tighter text-slate-900">
                     Console de <span className="gradient-text">Gestion</span>
                 </h2>
-                <p className="text-slate-500 font-medium">Contrôlez l'ensemble de l'écosystème Duelio.</p>
+                <p className="text-slate-500 text-sm md:text-base font-medium">Contrôlez l'ensemble de l'écosystème Duelio.</p>
             </motion.header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 lg:mb-10 px-4 lg:px-0">
                 <StatCard
                     label="Utilisateurs"
                     value={stats?.total_users ?? 0}
@@ -111,11 +111,11 @@ export const Dashboard: React.FC = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <motion.div variants={itemAnim} className="lg:col-span-8 glass-card p-8">
-                    <div className="flex justify-between items-center mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 px-4 lg:px-0 pb-8">
+                <motion.div variants={itemAnim} className="lg:col-span-8 glass-card p-6 md:p-8">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                         <h4 className="text-xl font-black tracking-tight text-slate-900">Activité Récente</h4>
-                        <button className="btn-secondary text-xs px-4 py-2">Historique</button>
+                        <button className="btn-secondary w-full sm:w-auto text-xs px-4 py-2">Historique</button>
                     </div>
                     <div className="space-y-4">
                         <div className="text-center py-10 text-slate-400 font-medium">
@@ -125,7 +125,7 @@ export const Dashboard: React.FC = () => {
                 </motion.div>
 
                 <motion.div variants={itemAnim} className="lg:col-span-4 space-y-6">
-                    <div className="glass-card p-8 bg-indigo-600 border-none shadow-xl shadow-indigo-100 flex flex-col justify-center text-center">
+                    <div className="glass-card p-6 md:p-8 bg-indigo-600 border-none shadow-xl shadow-indigo-100 flex flex-col justify-center text-center">
                         <h4 className="font-black text-white text-xl mb-3 pr-2">Duelio Plus</h4>
                         <p className="text-sm text-white/80 mb-6 font-medium">Accédez aux outils d'analyse avancés et marketing.</p>
                         <button className="bg-white text-indigo-600 font-black py-4 rounded-xl shadow-lg hover:bg-slate-50 transition-all">Savoir Plus</button>

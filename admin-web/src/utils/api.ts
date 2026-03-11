@@ -22,6 +22,7 @@ export const api = {
 
     // Gestion des questions
     getQuestions: (limit = 10) => api.get(`/admin/questions?limit=${limit}`),
+    createQuestion: (data: any) => api.post('/admin/questions', data),
 
     deleteQuestion: (id: string) => fetch(`${API_BASE_URL}/admin/questions/${id}`, { method: 'DELETE' }).then(r => r.json()),
 
@@ -39,6 +40,11 @@ export const api = {
     downloadTemplate: () => {
         window.open(`${API_BASE_URL}/admin/questions/template`, '_blank');
     },
+
+    // Gestion des utilisateurs
+    getUsers: (limit = 100) => api.get(`/admin/users?limit=${limit}`),
+    deleteUser: (id: string) => fetch(`${API_BASE_URL}/admin/users/${id}`, { method: 'DELETE' }).then(r => r.json()),
+    togglePremium: (id: string) => fetch(`${API_BASE_URL}/admin/users/${id}/premium`, { method: 'PATCH' }).then(r => r.json()),
 
     // Déblocage freemium
     unlockCompetition: (userId: string, amount: number) =>
