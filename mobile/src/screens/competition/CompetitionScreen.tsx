@@ -11,7 +11,20 @@ import { useCompetition } from '../../hooks/useCompetition';
 import { challengeService } from '../../services/challenges';
 import { Challenge, User, CATEGORIES } from '../../types';
 import { PremiumAlert } from '../../components/ui/PremiumAlert';
-import Animated, { FadeIn, FadeInDown, FadeInUp, Layout, SlideInRight } from 'react-native-reanimated';
+import { formatTimeAgo } from '../../utils/dateUtils';
+import Animated, { 
+    FadeIn, 
+    FadeInDown, 
+    FadeInUp, 
+    Layout, 
+    SlideInRight, 
+    useAnimatedStyle, 
+    useSharedValue, 
+    withRepeat, 
+    withTiming,
+    interpolate,
+    Easing
+} from 'react-native-reanimated';
 import LottieView from 'lottie-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -33,6 +46,22 @@ export const CompetitionScreen = () => {
         title: '',
         message: '',
         type: 'info'
+    });
+
+    const rotation = useSharedValue(0);
+
+    useEffect(() => {
+        rotation.value = withRepeat(
+            withTiming(1, { duration: 2000, easing: Easing.linear }),
+            -1,
+            false
+        );
+    }, []);
+
+    const rotationStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ rotate: `${rotation.value * 360}deg` }]
+        };
     });
 
     useEffect(() => {
@@ -126,16 +155,44 @@ export const CompetitionScreen = () => {
 
     if (state.gameState === 'loading') {
         return (
-            <ScreenWrapper style={styles.centerContent}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={styles.loadingText}>Recherche d'un adversaire...</Text>
+            <ScreenWrapper style={styles.container}>
+                <View style={[styles.centerContent, { flex: 1 }]}>
+                    <Animated.View 
+                        entering={FadeInDown.duration(800)}
+                        style={styles.searchAnimationContainer}
+                    >
+                        <LinearGradient
+                            colors={[COLORS.primary + '20', COLORS.secondary + '20']}
+                            style={styles.searchPulse}
+                        >
+                            <Animated.View 
+                                style={[styles.rotatingSwords, rotationStyle]}
+                            >
+                                <Swords size={60} color={COLORS.primary} />
+                            </Animated.View>
+                        </LinearGradient>
+                    </Animated.View>
+                    
+                    <Animated.Text 
+                        entering={FadeIn.delay(400)}
+                        style={styles.matchmakingTitle}
+                    >
+                        Recherche d'un adversaire
+                    </Animated.Text>
+                    <Animated.Text 
+                        entering={FadeIn.delay(600)}
+                        style={styles.matchmakingSubtitle}
+                    >
+                        Duelio prépare votre combat...
+                    </Animated.Text>
 
-                <TouchableOpacity
-                    style={[styles.button, styles.cancelButton]}
-                    onPress={handleLeave}
-                >
-                    <Text style={styles.buttonText}>Annuler</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.matchmakingCancelBtn}
+                        onPress={handleLeave}
+                    >
+                        <Text style={styles.matchmakingCancelText}>Abandonner la recherche</Text>
+                    </TouchableOpacity>
+                </View>
             </ScreenWrapper>
         );
     }
@@ -244,7 +301,7 @@ export const CompetitionScreen = () => {
                                 style={styles.gradientButton}
                             >
                                 <Zap color="#FFF" size={24} style={{ marginRight: 12 }} />
-                                <Text style={styles.buttonText}>Mode Matchfinding</Text>
+                                <Text style={styles.buttonText}>Trouver un adversaire</Text>
                             </LinearGradient>
                         </TouchableOpacity>
                     </Animated.View>
@@ -269,7 +326,7 @@ export const CompetitionScreen = () => {
                                                 <View>
                                                     <Text style={styles.challengeSender}>{challenge.attackerName}</Text>
                                                     <Text style={styles.challengeMeta}>
-                                                        Thème: {CATEGORIES.find(c => c.id === challenge.quizCategory)?.label}
+                                                        Thème: {CATEGORIES.find(c => c.id === challenge.quizCategory)?.label} • {formatTimeAgo(challenge.createdAt)}
                                                     </Text>
                                                 </View>
                                             </View>
@@ -287,19 +344,39 @@ export const CompetitionScreen = () => {
                                     <Animated.View
                                         entering={SlideInRight.delay(900 + index * 100)}
                                         key={challenge.id}
-                                        style={styles.challengeItem}
+                                        style={{ width: '100%' }}
                                     >
-                                        <View style={styles.userInfo}>
-                                            <View style={[styles.userAvatar, { backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border }]}>
-                                                <Target size={20} color={COLORS.textSecondary} />
+                                        <View style={styles.challengeItem}>
+                                            <View style={[styles.userInfo, { flex: 1 }]}>
+                                            <View style={[
+                                                styles.userAvatar, 
+                                                { 
+                                                    backgroundColor: challenge.status === 'pending' ? COLORS.card : COLORS.primary + '20', 
+                                                    borderWidth: challenge.status === 'pending' ? 1 : 0, 
+                                                    borderColor: COLORS.border 
+                                                }
+                                            ]}>
+                                                <Target size={20} color={challenge.status === 'pending' ? COLORS.textSecondary : COLORS.primary} />
                                             </View>
-                                            <View>
+                                            <View style={{ flex: 1 }}>
                                                 <Text style={styles.challengeSender}>{challenge.defenderName}</Text>
-                                                <Text style={styles.challengeMeta}>
-                                                    {challenge.status === 'pending'
-                                                        ? 'En attente...'
-                                                        : `Score: ${challenge.attackerScore} - ${challenge.defenderScore}`}
-                                                </Text>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                                                    {challenge.status === 'pending' ? (
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                             <Clock size={12} color={COLORS.warning} style={{ marginRight: 4 }} />
+                                                             <Text style={[styles.challengeMeta, { color: COLORS.warning }]}>
+                                                                 En attente... • {formatTimeAgo(challenge.createdAt)}
+                                                             </Text>
+                                                        </View>
+                                                    ) : (
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                            <Medal size={12} color={COLORS.primary} style={{ marginRight: 4 }} />
+                                                            <Text style={[styles.challengeMeta, { color: COLORS.primary, fontWeight: '600' }]}>
+                                                                Score: {challenge.attackerScore} - {challenge.defenderScore} • {formatTimeAgo(challenge.createdAt)}
+                                                            </Text>
+                                                        </View>
+                                                    )}
+                                                </View>
                                             </View>
                                         </View>
                                         {challenge.status === 'completed' ? (
@@ -331,6 +408,7 @@ export const CompetitionScreen = () => {
                                                 <Clock size={16} color={COLORS.warning} />
                                             </View>
                                         )}
+                                        </View>
                                     </Animated.View>
                                 ))}
                             </Animated.View>
@@ -644,7 +722,7 @@ const styles = StyleSheet.create({
     lobbyContentScroller: {
         padding: SPACING.xl,
         paddingTop: SPACING.xxl,
-        alignItems: 'center',
+        alignItems: 'stretch',
     },
     section: {
         width: '100%',
@@ -657,6 +735,8 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.m,
     },
     challengeItem: {
+        width: '100%',
+        alignSelf: 'stretch',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -773,6 +853,52 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+    // Matchmaking Styles
+    searchAnimationContainer: {
+        width: 180,
+        height: 180,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: SPACING.xl,
+        alignSelf: 'center',
+    },
+    searchPulse: {
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    rotatingSwords: {
+        padding: 20,
+    },
+    matchmakingTitle: {
+        fontSize: 24,
+        fontWeight: '900',
+        color: COLORS.text,
+        marginBottom: SPACING.s,
+        textAlign: 'center',
+    },
+    matchmakingSubtitle: {
+        fontSize: 16,
+        color: COLORS.textSecondary,
+        marginBottom: SPACING.xxl,
+        textAlign: 'center',
+    },
+    matchmakingCancelBtn: {
+        paddingVertical: SPACING.m,
+        paddingHorizontal: SPACING.xl,
+        borderRadius: 20,
+        backgroundColor: COLORS.card,
+        borderWidth: 1,
+        borderColor: COLORS.error + '20',
+        alignSelf: 'center',
+    },
+    matchmakingCancelText: {
+        color: COLORS.error,
+        fontWeight: '800',
+        fontSize: 14,
     },
     // Premium Competition Styles
     iconHeaderContainer: {

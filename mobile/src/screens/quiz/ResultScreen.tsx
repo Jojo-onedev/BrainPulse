@@ -13,7 +13,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
 
 export const ResultScreen = ({ route, navigation }: Props) => {
     const { score, total, quizId } = route.params;
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const [saving, setSaving] = useState(false);
 
     const percentage = Math.round((score / total) * 100);
@@ -33,6 +33,9 @@ export const ResultScreen = ({ route, navigation }: Props) => {
             const categoryId = quiz ? quiz.category : 'general';
 
             await saveQuizResult(user.uid, quizId, score, total, categoryId);
+            
+            // Immediately refresh the profile so the Home/Profile screens reflect the new stats
+            await refreshProfile();
         } catch (error) {
             console.error(error);
             Alert.alert('Erreur', 'Impossible de sauvegarder le score.');

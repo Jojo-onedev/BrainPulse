@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, ScrollView, Share } from 'react-native';
 import { ScreenWrapper } from '../../components/layout/ScreenWrapper';
 import { COLORS, SPACING, SHADOWS } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
@@ -12,31 +12,21 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
-import { ComingSoonModal } from '../../components/ui/ComingSoonModal';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 export const ProfileScreen = () => {
     const { user, signOut } = useAuth();
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const [comingSoon, setComingSoon] = React.useState<{ visible: boolean; feature: string }>({
-        visible: false,
-        feature: ''
-    });
 
-    const handleComingSoon = (feature: string) => {
-        setComingSoon({ visible: true, feature });
-    };
-
-    const handleResetOnboarding = async () => {
+    const shareApp = async () => {
         try {
-            await AsyncStorage.removeItem('alreadyLaunched');
-            Alert.alert(
-                'Onboarding',
-                'L\'onboarding sera affiché au prochain redémarrage de l\'application.',
-                [{ text: 'Compris' }]
-            );
-        } catch (e) {
-            console.error(e);
+            await Share.share({
+                message: 'Viens tester tes connaissances sur Duelio ! L\'application de quiz ultime. 🧠🏆',
+                url: 'https://duelio.app', // Placeholder URL
+                title: 'Duelio'
+            });
+        } catch (error: any) {
+            console.error(error.message);
         }
     };
 
@@ -140,19 +130,19 @@ export const ProfileScreen = () => {
                         icon={BarChart3}
                         label="Statistiques"
                         description="Voir votre progression détaillée"
-                        onPress={() => handleComingSoon('Statistiques')}
+                        onPress={() => navigation.navigate('Statistics')}
                     />
                     <MenuOption
                         icon={Heart}
                         label="Favoris"
                         description="Retrouvez vos questions préférées"
-                        onPress={() => handleComingSoon('Favoris')}
+                        onPress={() => navigation.navigate('Favorites')}
                     />
                     <MenuOption
                         icon={Trophy}
                         label="Leaderboard"
                         description="Classement des meilleurs joueurs"
-                        onPress={() => handleComingSoon('Classement')}
+                        onPress={() => navigation.navigate('Leaderboard')}
                     />
                 </Animated.View>
 
@@ -162,7 +152,7 @@ export const ProfileScreen = () => {
                         icon={CreditCard}
                         label="Abonnement Duelio"
                         color={COLORS.warning}
-                        onPress={() => handleComingSoon('Premium')}
+                        onPress={() => navigation.navigate('Paywall')}
                         rightElement={
                             <View style={[styles.badge, { backgroundColor: COLORS.warning + '20' }]}>
                                 <Text style={[styles.badgeText, { color: COLORS.warning }]}>
@@ -174,12 +164,12 @@ export const ProfileScreen = () => {
                     <MenuOption
                         icon={Bell}
                         label="Notifications"
-                        onPress={() => handleComingSoon('Notifications')}
+                        onPress={() => navigation.navigate('Notifications')}
                     />
                     <MenuOption
                         icon={Shield}
                         label="Confidentialité"
-                        onPress={() => handleComingSoon('Vie privée')}
+                        onPress={() => navigation.navigate('Privacy')}
                     />
                 </Animated.View>
 
@@ -188,17 +178,12 @@ export const ProfileScreen = () => {
                     <MenuOption
                         icon={HelpCircle}
                         label="Centre d'aide"
-                        onPress={() => handleComingSoon('Aide')}
-                    />
-                    <MenuOption
-                        icon={RotateCcw}
-                        label="Réinitialiser l'Onboarding"
-                        onPress={handleResetOnboarding}
+                        onPress={() => navigation.navigate('HelpCenter')}
                     />
                     <MenuOption
                         icon={Share2}
                         label="Partager l'application"
-                        onPress={() => handleComingSoon('Partage')}
+                        onPress={shareApp}
                     />
                 </Animated.View>
 
@@ -212,12 +197,6 @@ export const ProfileScreen = () => {
 
                 <Text style={styles.versionLabel}>Duelio • Version 1.0.0 (Alpha)</Text>
             </ScrollView>
-
-            <ComingSoonModal
-                visible={comingSoon.visible}
-                featureName={comingSoon.feature}
-                onClose={() => setComingSoon({ ...comingSoon, visible: false })}
-            />
         </ScreenWrapper>
     );
 };

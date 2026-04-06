@@ -6,7 +6,9 @@ import { RootStackParamList } from '../../types/navigation';
 import { MOCK_QUIZZES } from '../../data/mock';
 import { useQuiz } from '../../hooks/useQuiz';
 import { COLORS, SPACING, SHADOWS } from '../../theme';
-import { X, Check, Info } from 'lucide-react-native';
+import { X, Check, Info, Heart, ChevronLeft } from 'lucide-react-native';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../services/supabase';
 import { fetchQuestionsFromApi } from '../../services/quizApi';
 import { Question } from '../../types';
 
@@ -14,6 +16,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
 
 export const QuizScreen = ({ route, navigation }: Props) => {
     const { quizId } = route.params;
+    const { user, refreshProfile } = useAuth();
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -71,6 +74,35 @@ export const QuizScreen = ({ route, navigation }: Props) => {
         }
     }, [isFinished]);
 
+    const toggleFavorite = async () => {
+        if (!user) {
+            Alert.alert('Connexion requise', 'Connectez-vous pour ajouter des favoris.');
+            return;
+        }
+
+        const currentFavs = [...(user.favorites || [])];
+        const isFav = currentFavs.includes(quizId);
+        
+        let newFavs;
+        if (isFav) {
+            newFavs = currentFavs.filter(id => id !== quizId);
+        } else {
+            newFavs = [...currentFavs, quizId];
+        }
+
+        try {
+            const { error } = await supabase
+                .from('users')
+                .update({ favorites: newFavs })
+                .eq('id', user.uid);
+
+            if (error) throw error;
+            await refreshProfile();
+        } catch (error) {
+            console.error('Error updating favorites:', error);
+        }
+    };
+
     if (loading) {
         return (
             <ScreenWrapper style={styles.centerContent}>
@@ -108,10 +140,26 @@ export const QuizScreen = ({ route, navigation }: Props) => {
         <ScreenWrapper style={styles.container}>
             {/* Header / Progress */}
             <View style={styles.header}>
-                <View style={styles.progressBarBg}>
-                    <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+                <View style={styles.headerTop}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+                        <ChevronLeft size={24} color={COLORS.text} />
+                    </TouchableOpacity>
+                    
+                    <View style={styles.progressBarWrapper}>
+                        <View style={styles.progressBarBg}>
+                            <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+                        </View>
+                        <Text style={styles.progressText}>Question {currentIndex + 1}/{totalQuestions}</Text>
+                    </View>
+
+                    <TouchableOpacity onPress={toggleFavorite} style={styles.iconButton}>
+                        <Heart 
+                            size={24} 
+                            color={user?.favorites?.includes(quizId) ? COLORS.error : COLORS.text} 
+                            fill={user?.favorites?.includes(quizId) ? COLORS.error : 'transparent'} 
+                        />
+                    </TouchableOpacity>
                 </View>
-                <Text style={styles.progressText}>Question {currentIndex + 1}/{totalQuestions}</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
@@ -184,22 +232,42 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: SPACING.m,
+        backgroundColor: '#FFF',
+        ...SHADOWS.tiny,
+    },
+    headerTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: SPACING.m,
+    },
+    iconButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    progressBarWrapper: {
+        flex: 1,
     },
     progressBarBg: {
         height: 8,
-        backgroundColor: COLORS.border,
+        backgroundColor: COLORS.border + '50',
         borderRadius: 4,
-        marginBottom: SPACING.s,
+        marginBottom: 4,
         overflow: 'hidden',
     },
     progressBarFill: {
         height: '100%',
         backgroundColor: COLORS.primary,
+        borderRadius: 4,
     },
     progressText: {
         color: COLORS.textSecondary,
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 12,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        opacity: 0.7,
     },
     content: {
         padding: SPACING.m,

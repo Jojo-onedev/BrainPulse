@@ -10,6 +10,12 @@ import { PaywallScreen } from '../screens/paywall/PaywallScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { SignupScreen } from '../screens/auth/SignupScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
+import { LeaderboardScreen } from '../screens/profile/LeaderboardScreen';
+import { StatisticsScreen } from '../screens/profile/StatisticsScreen';
+import { FavoritesScreen } from '../screens/profile/FavoritesScreen';
+import { PrivacyScreen } from '../screens/profile/PrivacyScreen';
+import { NotificationsSettingsScreen } from '../screens/profile/NotificationsSettingsScreen';
+import { HelpCenterScreen } from '../screens/profile/HelpCenterScreen';
 import { RootStackParamList } from '../types/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator } from 'react-native';
@@ -105,6 +111,12 @@ export const RootNavigator = () => {
                         animation: 'slide_from_right'
                     }}
                 />
+                <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+                <Stack.Screen name="Statistics" component={StatisticsScreen} />
+                <Stack.Screen name="Favorites" component={FavoritesScreen} />
+                <Stack.Screen name="Privacy" component={PrivacyScreen} />
+                <Stack.Screen name="Notifications" component={NotificationsSettingsScreen} />
+                <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

@@ -69,21 +69,21 @@ export const HomeScreen = ({ navigation }: Props) => {
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.quickActions}>
-                    <TouchableOpacity style={styles.actionItem} onPress={() => showComingSoon('Classement')}>
+                    <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate('Leaderboard')}>
                         <View style={[styles.actionIconContainer, { backgroundColor: '#FFD70015' }]}>
                             <Trophy size={22} color="#FFD700" />
                         </View>
                         <Text style={styles.actionLabel}>Classement</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionItem} onPress={() => showComingSoon('Favoris')}>
+                    <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate('Favorites')}>
                         <View style={[styles.actionIconContainer, { backgroundColor: '#FF658415' }]}>
                             <Star size={22} color="#FF6584" />
                         </View>
                         <Text style={styles.actionLabel}>Favoris</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionItem} onPress={() => showComingSoon('Statistiques')}>
+                    <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate('Statistics')}>
                         <View style={[styles.actionIconContainer, { backgroundColor: '#6C63FF15' }]}>
                             <BarChart3 size={22} color="#6C63FF" />
                         </View>

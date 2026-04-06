@@ -5,12 +5,17 @@ import { COLORS, SPACING, SHADOWS } from '../../theme';
 import { MOCK_QUIZZES } from '../../data/mock';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
-import { Clock, BookOpen, ChevronRight } from 'lucide-react-native';
+import { Clock, BookOpen, ChevronRight, Heart } from 'lucide-react-native';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../services/supabase';
+import { Alert } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'QuizList'>;
 
 export const QuizListScreen = ({ route, navigation }: Props) => {
     const { categoryId, categoryName } = route.params;
+    const { user, refreshProfile } = useAuth();
 
     const quizzes = MOCK_QUIZZES.filter(q => q.category === categoryId);
 
@@ -20,6 +25,35 @@ export const QuizListScreen = ({ route, navigation }: Props) => {
             case 'medium': return COLORS.warning;
             case 'hard': return COLORS.error;
             default: return COLORS.textSecondary;
+        }
+    };
+
+    const toggleFavorite = async (quizId: string) => {
+        if (!user) {
+            Alert.alert('Connexion requise', 'Connectez-vous pour ajouter des favoris.');
+            return;
+        }
+
+        const currentFavs = [...(user.favorites || [])];
+        const isFav = currentFavs.includes(quizId);
+        
+        let newFavs;
+        if (isFav) {
+            newFavs = currentFavs.filter(id => id !== quizId);
+        } else {
+            newFavs = [...currentFavs, quizId];
+        }
+
+        try {
+            const { error } = await supabase
+                .from('users')
+                .update({ favorites: newFavs })
+                .eq('id', user.uid);
+
+            if (error) throw error;
+            await refreshProfile();
+        } catch (error) {
+            console.error('Error updating favorites:', error);
         }
     };
 
@@ -53,7 +87,19 @@ export const QuizListScreen = ({ route, navigation }: Props) => {
                     )}
                 </View>
             </View>
-            <ChevronRight color={COLORS.border} />
+            <View style={styles.cardRight}>
+                <TouchableOpacity 
+                    onPress={() => toggleFavorite(item.id)}
+                    style={styles.heartButton}
+                >
+                    <Heart 
+                        size={22} 
+                        color={user?.favorites?.includes(item.id) ? COLORS.error : COLORS.border} 
+                        fill={user?.favorites?.includes(item.id) ? COLORS.error : 'transparent'} 
+                    />
+                </TouchableOpacity>
+                <ChevronRight color={COLORS.border} />
+            </View>
         </TouchableOpacity>
     );
 
@@ -111,13 +157,21 @@ const styles = StyleSheet.create({
     },
     card: {
         backgroundColor: COLORS.card,
-        borderRadius: 12,
+        borderRadius: 20,
         padding: SPACING.m,
         marginBottom: SPACING.m,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         ...SHADOWS.small,
+    },
+    cardRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    heartButton: {
+        padding: 4,
     },
     cardContent: {
         flex: 1,

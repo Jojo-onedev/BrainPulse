@@ -10,6 +10,12 @@ export type RootStackParamList = {
     Result: { score: number; total: number; quizId: string };
     Paywall: undefined;
     EditProfile: undefined;
+    Leaderboard: undefined;
+    Statistics: undefined;
+    Favorites: undefined;
+    Privacy: undefined;
+    Notifications: undefined;
+    HelpCenter: undefined;
 };
 
 export type MainTabParamList = {

@@ -2,14 +2,32 @@ import { supabase } from './supabase';
 import { Question, CategoryId } from '../types';
 
 const CATEGORY_LABEL_TO_ID: Record<string, CategoryId> = {
+    'histoire': 'history',
+    'history': 'history',
     'Histoire': 'history',
+    'géographie': 'geography',
+    'geographie': 'geography',
+    'geography': 'geography',
     'Géographie': 'geography',
+    'science': 'science',
+    'sciences': 'science',
     'Sciences': 'science',
+    'sport': 'sports',
+    'sports': 'sports',
     'Sport': 'sports',
+    'culture africaine': 'culture_africa',
     'Culture Africaine': 'culture_africa',
+    'culture_africa': 'culture_africa',
+    'culture': 'culture_africa',
+    'Culture': 'culture_africa',
+    'actualité': 'news',
     'Actualité': 'news',
-    'Culture Générale': 'general',
-    'Général': 'general'
+    'news': 'news',
+    'général': 'general',
+    'general': 'general',
+    'Général': 'general',
+    'culture générale': 'general',
+    'Culture Générale': 'general'
 };
 
 /**
@@ -17,19 +35,15 @@ const CATEGORY_LABEL_TO_ID: Record<string, CategoryId> = {
  */
 export const fetchQuestionsFromSupabase = async (categoryId: CategoryId, limit: number = 5): Promise<Question[]> => {
     try {
-        // Find the label matching this categoryId
+        // Find the label matching this categoryId (for backward compatibility or variations in DB)
         const categoryLabel = Object.keys(CATEGORY_LABEL_TO_ID).find(key => CATEGORY_LABEL_TO_ID[key] === categoryId);
 
-        let query = supabase.from('questions').select('*').limit(limit);
-
-        // Filter by slug OR by label (to be compatible with both formats in DB)
-        if (categoryLabel) {
-            query = query.or(`category.eq.${categoryId},category.eq.${categoryLabel}`);
-        } else {
-            query = query.eq('category', categoryId);
-        }
-
-        const { data, error } = await query;
+        // Use the new RPC function for random selection
+        const { data, error } = await supabase.rpc('get_random_questions', {
+            cat_id: categoryId,
+            cat_label: categoryLabel || categoryId,
+            lim: limit
+        });
 
         if (error) throw error;
 

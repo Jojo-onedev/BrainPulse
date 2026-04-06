@@ -12,6 +12,7 @@ interface AuthContextType {
     signUp: (email: string, password: string, displayName: string, photoURL?: string) => Promise<{ user: SupabaseUser | null; session: Session | null; requiresConfirmation: boolean }>;
     updateProfile: (displayName: string, photoURL?: string) => Promise<void>;
     signOut: () => Promise<void>;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
     signUp: async () => ({ user: null, session: null, requiresConfirmation: false }),
     updateProfile: async () => { },
     signOut: async () => { },
+    refreshProfile: async () => { },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -46,6 +48,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             },
             favorites: profile?.favorites || [],
         };
+    };
+
+    const refreshProfile = async () => {
+        if (!session?.user) return;
+        try {
+            const profile = await fetchUserProfile(session.user);
+            if (profile) {
+                setUser(mapToAppUser(session.user, profile));
+            }
+        } catch (error) {
+            console.error('Error refreshing profile:', error);
+        }
     };
 
     const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
@@ -270,7 +284,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, signIn, signUp, updateProfile, signOut }}>
+        <AuthContext.Provider value={{ user, session, loading, signIn, signUp, updateProfile, signOut, refreshProfile }}>
             {children}
         </AuthContext.Provider>
     );

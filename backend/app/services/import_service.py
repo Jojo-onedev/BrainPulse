@@ -68,33 +68,81 @@ async def import_questions(file: UploadFile = File(...), db: Session = Depends(g
         
     return {"status": "success", "imported_count": len(questions_to_add)}
 
+CATEGORY_MAP = {
+    'histoire': 'history',
+    'history': 'history',
+    'géographie': 'geography',
+    'geographie': 'geography',
+    'geography': 'geography',
+    'science': 'science',
+    'sciences': 'science',
+    'sport': 'sports',
+    'sports': 'sports',
+    'culture africaine': 'culture_africa',
+    'culture africa': 'culture_africa',
+    'culture': 'culture_africa',
+    'actualité': 'news',
+    'news': 'news',
+    'général': 'general',
+    'general': 'general',
+    'culture générale': 'general'
+}
+
+def normalize_category(cat):
+    if not cat:
+        return 'general'
+    cat_lower = str(cat).lower().strip()
+    return CATEGORY_MAP.get(cat_lower, 'general')
+
 def process_row(row):
     """
     Nettoie et formate une ligne de données.
     """
-    # Conversion des options (liste séparée par des points-virgules ou JSON)
-    options_raw = row.get('options', '[]')
+    # ... rest of the logic ...
+    # Extract options (Check for both 'options' and 'option' columns)
+    options_raw = row.get('options')
+    if options_raw is None:
+        options_raw = row.get('option', '[]')
+        
     if isinstance(options_raw, str) and ';' in options_raw:
         options = [opt.strip() for opt in options_raw.split(';')]
     else:
         try:
             options = json.loads(options_raw) if isinstance(options_raw, str) else options_raw
         except:
-            options = []
+            if isinstance(options_raw, str) and options_raw.strip():
+                 options = [options_raw.strip()]
+            else:
+                 options = []
 
-    # Conversion des réponses correctes
     correct_raw = row.get('correct_answers', '[0]')
     if isinstance(correct_raw, str) and ';' in correct_raw:
-        correct_answers = [int(idx.strip()) for idx in correct_raw.split(';')]
-    else:
+        # Si c'est une liste séparée par des points-virgules, on convertit 1-based (Excel) en 0-based(App)
         try:
-            correct_answers = json.loads(correct_raw) if isinstance(correct_raw, str) else [int(correct_raw)]
+            correct_answers = [int(idx.strip()) - 1 for idx in correct_raw.split(';')]
         except:
             correct_answers = [0]
+    else:
+        try:
+            # Si c'est déjà un ID simple venant du Excel
+            if isinstance(correct_raw, (int, float)):
+                correct_answers = [int(correct_raw) - 1]
+            else:
+                parsed = json.loads(correct_raw) if isinstance(correct_raw, str) else correct_raw
+                if isinstance(parsed, list):
+                   # On suppose que ce json vient de l'ancien système, on garde tel quel si on sait pas
+                   correct_answers = [int(p) for p in parsed] 
+                else:
+                   correct_answers = [int(parsed) - 1]
+        except:
+            correct_answers = [0]
+            
+    # S'assurer de ne pas avoir de nombres négatifs
+    correct_answers = [max(0, ans) for ans in correct_answers]
 
     return {
         'type': row.get('type', 'single'),
-        'category': row.get('category', 'Général'),
+        'category': normalize_category(row.get('category', row.get('catégorie', 'general'))),
         'question_text': row.get('question', row.get('question_text')),
         'options': options,
         'correct_answers': correct_answers,

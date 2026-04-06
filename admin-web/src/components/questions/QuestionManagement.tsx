@@ -290,10 +290,13 @@ export const QuestionManagement: React.FC = () => {
                                 onChange={(e) => setNewQuestion({...newQuestion, category: e.target.value})}
                             />
                             <datalist id="categories">
-                                <option value="Culture" />
-                                <option value="Histoire" />
-                                <option value="Géographie" />
-                                <option value="Sport" />
+                                <option value="culture_africa">Culture Africaine</option>
+                                <option value="history">Histoire</option>
+                                <option value="geography">Géographie</option>
+                                <option value="sports">Sport</option>
+                                <option value="science">Sciences</option>
+                                <option value="news">Actualité</option>
+                                <option value="general">Culture Générale</option>
                             </datalist>
                         </div>
                     </div>
