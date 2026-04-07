@@ -4,7 +4,7 @@
  */
 
 // Replace this with your URL once your project is deployed on Render
-const PRODUCTION_URL = 'https://duelio-backend.onrender.com';
+const PRODUCTION_URL = 'https://duelio-backend.onrender.com/api';
 const LOCAL_URL = 'http://localhost:8000';
 
 export const API_BASE_URL = __DEV__ ? LOCAL_URL : PRODUCTION_URL;
