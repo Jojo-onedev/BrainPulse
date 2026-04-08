@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenWrapper } from '../../components/layout/ScreenWrapper';
 import { COLORS, SPACING } from '../../theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -12,6 +13,7 @@ import { MOCK_QUIZZES } from '../../data/mock';
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
 
 export const ResultScreen = ({ route, navigation }: Props) => {
+    const insets = useSafeAreaInsets();
     const { score, total, quizId } = route.params;
     const { user, refreshProfile } = useAuth();
     const [saving, setSaving] = useState(false);
@@ -45,7 +47,7 @@ export const ResultScreen = ({ route, navigation }: Props) => {
     };
 
     return (
-        <ScreenWrapper style={styles.container}>
+        <ScreenWrapper style={styles.container} withBottomInset={false}>
             <View style={styles.content}>
                 <Trophy size={80} color={COLORS.warning} style={styles.icon} />
 
@@ -58,7 +60,7 @@ export const ResultScreen = ({ route, navigation }: Props) => {
                     {saving && <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 10 }} />}
                 </View>
 
-                <View style={styles.actions}>
+                <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, SPACING.xl) }]}>
                     <TouchableOpacity
                         style={[styles.button, styles.primaryButton]}
                         onPress={() => navigation.replace('Quiz', { quizId })}

@@ -56,7 +56,7 @@ export const HomeScreen = ({ navigation }: Props) => {
     };
 
     return (
-        <ScreenWrapper style={styles.container}>
+        <ScreenWrapper style={styles.container} withBottomInset={false}>
             <View style={styles.header}>
                 <View>
                     <Text style={styles.greeting}>{getGreeting()}</Text>

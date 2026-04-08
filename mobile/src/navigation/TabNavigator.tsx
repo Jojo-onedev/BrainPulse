@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { CompetitionScreen } from '../screens/competition/CompetitionScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
@@ -10,6 +11,8 @@ import { Home, Trophy, User } from 'lucide-react-native';
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const TabNavigator = () => {
+    const insets = useSafeAreaInsets();
+
     return (
         <Tab.Navigator
             screenOptions={{
@@ -19,8 +22,8 @@ export const TabNavigator = () => {
                 tabBarStyle: {
                     borderTopColor: COLORS.border,
                     backgroundColor: COLORS.card,
-                    paddingBottom: 5,
-                    height: 60,
+                    height: 60 + (insets.bottom > 0 ? insets.bottom - 10 : 0),
+                    paddingBottom: insets.bottom > 0 ? insets.bottom / 2 : 5,
                 },
             }}
         >

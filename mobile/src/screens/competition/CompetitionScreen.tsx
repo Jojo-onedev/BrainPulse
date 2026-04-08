@@ -134,7 +134,7 @@ export const CompetitionScreen = () => {
 
     if (!user) {
         return (
-            <ScreenWrapper style={styles.container}>
+            <ScreenWrapper style={styles.container} withBottomInset={false}>
                 <View style={styles.lockedContent}>
                     <Lock size={64} color={COLORS.textSecondary} style={{ marginBottom: SPACING.m }} />
                     <Text style={styles.title}>Mode Compétition</Text>
@@ -155,7 +155,7 @@ export const CompetitionScreen = () => {
 
     if (state.gameState === 'loading') {
         return (
-            <ScreenWrapper style={styles.container}>
+            <ScreenWrapper style={styles.container} withBottomInset={false}>
                 <View style={[styles.centerContent, { flex: 1 }]}>
                     <Animated.View 
                         entering={FadeInDown.duration(800)}
@@ -200,7 +200,7 @@ export const CompetitionScreen = () => {
     if (state.gameState === 'waiting') {
         if (view === 'category_select') {
             return (
-                <ScreenWrapper style={styles.container}>
+                <ScreenWrapper style={styles.container} withBottomInset={false}>
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => setView('search')} style={styles.backButton}>
                             <X size={24} color={COLORS.text} />
@@ -226,7 +226,7 @@ export const CompetitionScreen = () => {
 
         if (view === 'search') {
             return (
-                <ScreenWrapper style={styles.container}>
+                <ScreenWrapper style={styles.container} withBottomInset={false}>
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => setView('lobby')} style={styles.backButton}>
                             <X size={24} color={COLORS.text} />
@@ -279,7 +279,7 @@ export const CompetitionScreen = () => {
         }
 
         return (
-            <ScreenWrapper style={styles.container}>
+            <ScreenWrapper style={styles.container} withBottomInset={false}>
                 <ScrollView contentContainerStyle={styles.lobbyContentScroller}>
                     <Animated.View entering={FadeInDown.delay(200)} style={styles.lobbyHeader}>
                         <View style={styles.iconHeaderContainer}>
@@ -422,7 +422,7 @@ export const CompetitionScreen = () => {
     if (state.gameState === 'finished') {
         const won = state.score > state.opponentScore;
         return (
-            <ScreenWrapper style={styles.container}>
+            <ScreenWrapper style={styles.container} withBottomInset={false}>
                 <View style={styles.lobbyContent}>
                     <Text style={[styles.title, { color: won ? COLORS.success : COLORS.error }]}>
                         {won ? 'VICTOIRE !' : 'DÉFAITE...'}
@@ -453,7 +453,7 @@ export const CompetitionScreen = () => {
 
     // PLAYING STATE
     return (
-        <ScreenWrapper style={styles.gameContainer}>
+        <ScreenWrapper style={styles.gameContainer} withBottomInset={false}>
             {/* Header / Scoreboard */}
             <View style={styles.scoreBoard}>
                 <View style={styles.playerScore}>

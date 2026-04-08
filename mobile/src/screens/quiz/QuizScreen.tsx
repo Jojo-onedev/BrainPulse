@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenWrapper } from '../../components/layout/ScreenWrapper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
@@ -15,6 +16,7 @@ import { Question } from '../../types';
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
 
 export const QuizScreen = ({ route, navigation }: Props) => {
+    const insets = useSafeAreaInsets();
     const { quizId } = route.params;
     const { user, refreshProfile } = useAuth();
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -137,7 +139,7 @@ export const QuizScreen = ({ route, navigation }: Props) => {
     };
 
     return (
-        <ScreenWrapper style={styles.container}>
+        <ScreenWrapper style={styles.container} withBottomInset={false}>
             {/* Header / Progress */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
@@ -194,7 +196,7 @@ export const QuizScreen = ({ route, navigation }: Props) => {
                 )}
             </ScrollView>
 
-            <View style={styles.footer}>
+            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, SPACING.m) }]}>
                 {!isAnswered ? (
                     <TouchableOpacity
                         style={[styles.button, styles.primaryButton, selectedOption === null && styles.disabledButton]}

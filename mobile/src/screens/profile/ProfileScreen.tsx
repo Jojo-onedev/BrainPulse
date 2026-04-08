@@ -32,7 +32,7 @@ export const ProfileScreen = () => {
 
     if (!user) {
         return (
-            <ScreenWrapper style={styles.centerContent}>
+            <ScreenWrapper style={styles.centerContent} withBottomInset={false}>
                 <View style={styles.emptyState}>
                     <User size={64} color={COLORS.border} />
                     <Text style={styles.emptyTitle}>Non connecté</Text>
@@ -64,7 +64,7 @@ export const ProfileScreen = () => {
     );
 
     return (
-        <ScreenWrapper style={styles.container}>
+        <ScreenWrapper style={styles.container} withBottomInset={false}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {/* Header Section */}
                 <Animated.View entering={FadeInDown.duration(600)} style={styles.profileHeader}>

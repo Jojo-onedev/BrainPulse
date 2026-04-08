@@ -6,14 +6,20 @@ import { COLORS } from '../../theme';
 interface ScreenWrapperProps {
     children: React.ReactNode;
     style?: ViewStyle;
-    withScrollView?: boolean; // Future extension
+    withScrollView?: boolean;
+    withBottomInset?: boolean;
 }
 
-export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children, style }) => {
+export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({ children, style, withBottomInset = true }) => {
     const insets = useSafeAreaInsets();
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }, style]}>
+        <View style={[
+            styles.container, 
+            { paddingTop: insets.top },
+            withBottomInset && { paddingBottom: insets.bottom },
+            style
+        ]}>
             <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
             {children}
         </View>
