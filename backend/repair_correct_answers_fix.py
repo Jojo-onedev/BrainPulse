@@ -1,4 +1,5 @@
 import os
+import sys
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
@@ -8,16 +9,20 @@ import json
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    print("No DB URL")
+    sys.exit(1)
+
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
-def repair_correct_answers():
+def repair():
     db = SessionLocal()
     try:
-        excel_path = '../questionnaire_modele_image.xlsx'
+        excel_path = r'c:\Users\batio\OneDrive\Documents\mydiffpro\Duelio\questionnaire_modele_image.xlsx'
         if not os.path.exists(excel_path):
             print("Excel file not found, exiting.")
             return
@@ -34,14 +39,15 @@ def repair_correct_answers():
             # Find in Excel
             match = df[df['question'] == q_text]
             if not match.empty:
-                excel_correct_raw = str(match.iloc[0].get('correct_answers', '1'))
+                excel_correct_raw = str(match.iloc[0].get('correct_answers', '0'))
                 
                 try:
                     if ';' in excel_correct_raw:
-                        # Re-calculate correct answers based on Excel (already 0-indexed in the Excel file)
+                        # Re-calculate correct answers based on Excel WITHOUT subtracting 1
                         new_correct = [int(idx.strip()) for idx in excel_correct_raw.split(';')]
                     else:
-                        new_correct = [int(float(excel_correct_raw))]
+                        parsed_val = int(float(excel_correct_raw))
+                        new_correct = [parsed_val]
                         
                     # Update DB if different
                     if json.dumps(new_correct) != json.dumps(db_correct_ans):
@@ -49,9 +55,9 @@ def repair_correct_answers():
                        db.execute(upd_stmt, {"correct": json.dumps(new_correct), "id": q_id})
                        repaired_count += 1
                 except ValueError as e:
-                   print(f"Skipping row {q_text} due to value error: {e}")
+                   print(f"Skipping row {q_text[:20]} due to value error: {e}")
                 
-        print(f"Repaired correct_answers for {repaired_count} questions based on Excel mapping.")
+        print(f"Fixed correct_answers for {repaired_count} questions based on exact Excel mapping (no -1).")
         db.commit()
     except Exception as e:
         print(f"Error repairing correct answers: {e}")
@@ -60,4 +66,4 @@ def repair_correct_answers():
         db.close()
 
 if __name__ == "__main__":
-    repair_correct_answers()
+    repair()
